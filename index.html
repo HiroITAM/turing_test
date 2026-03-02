@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Turing - Terminal del Juez</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --juez-bg: #3b82f6;
+            --sujeto-bg: #f1f5f9;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        h2, h3 { color: var(--text-main); margin-top: 0; }
+
+        /* --- Área de Login --- */
+        #login-area { 
+            text-align: center; 
+            padding: 50px 30px; 
+            background: var(--card-bg); 
+            border-radius: 16px; 
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            max-width: 400px;
+            margin: 100px auto;
+        }
+        
+        #login-area p { color: var(--text-muted); margin-bottom: 20px; }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        #login-area input { margin-bottom: 20px; text-align: center;}
+
+        /* --- Área de Chat --- */
+        #chat-area { display: none; margin-top: 20px;}
+        
+        .header-sala {
+            background: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-sala h2 { margin: 0; font-size: 1.25rem; }
+        #nombre-sala { color: var(--primary); font-weight: 700; }
+
+        .contenedor-principal { 
+            display: flex; 
+            gap: 20px; 
+            align-items: stretch; 
+            flex-wrap: wrap;
+        }
+
+        .seccion-chat { 
+            flex: 2; 
+            min-width: 300px; 
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        #chat { 
+            height: 450px; 
+            overflow-y: auto; 
+            padding: 20px; 
+            background: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Scrollbar personalizado */
+        #chat::-webkit-scrollbar { width: 6px; }
+        #chat::-webkit-scrollbar-track { background: transparent; }
+        #chat::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* Burbujas de mensaje */
+        .mensaje { 
+            max-width: 75%; 
+            padding: 12px 16px; 
+            border-radius: 16px; 
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .juez { 
+            background: var(--juez-bg); 
+            color: white; 
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .juez strong { display: none; /* Ocultamos el "Tú:" para un look más moderno */ }
+
+        .sujeto { 
+            background: var(--sujeto-bg); 
+            color: var(--text-main); 
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .sujeto strong { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+
+        .input-area { 
+            display: flex; 
+            gap: 10px; 
+            padding: 15px; 
+            border-top: 1px solid var(--border-color);
+            background: #f8fafc;
+        }
+
+        /* --- Botones --- */
+        button { 
+            padding: 12px 24px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 600;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: transform 0.1s, filter 0.2s, background-color 0.2s;
+        }
+
+        button:active { transform: scale(0.98); }
+
+        .btn-enviar { 
+            background: var(--primary); 
+            color: white; 
+        }
+        
+        .btn-enviar:hover { background: var(--primary-hover); }
+
+        /* --- Panel de Decisión --- */
+        .panel-decision { 
+            flex: 1; 
+            min-width: 250px;
+            background: var(--card-bg); 
+            padding: 24px; 
+            border-radius: 16px; 
+            text-align: center; 
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border-top: 4px solid #f59e0b;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .panel-decision p { color: var(--text-muted); margin-bottom: 24px; }
+
+        .btn-humano { 
+            background: #10b981; 
+            color: white; 
+            width: 100%; 
+            margin-bottom: 12px; 
+            padding: 16px; 
+        }
+        .btn-humano:hover { background: #059669; }
+
+        .btn-ia { 
+            background: #ef4444; 
+            color: white; 
+            width: 100%; 
+            padding: 16px; 
+        }
+        .btn-ia:hover { background: #dc2626; }
+
+    </style>
+</head>
+<body>
+
+    <div id="login-area">
+        <h2>Prueba de Turing</h2>
+        <p>Ingresa el código de sesión asignado para comenzar la evaluación.</p>
+        <input type="text" id="input-sala" placeholder="Ej: sala01" onkeypress="if(event.key === 'Enter') conectarSala()">
+        <button onclick="conectarSala()" class="btn-enviar">Comenzar Evaluación</button>
+    </div>
+
+    <div id="chat-area">
+        <div class="header-sala">
+            <h2>Terminal del Juez</h2>
+            <span id="nombre-sala"></span>
+        </div>
+        
+        <div class="contenedor-principal">
+            <div class="seccion-chat">
+                <div id="chat"></div>
+                <div class="input-area">
+                    <input type="text" id="input-mensaje" placeholder="Escribe tu pregunta al sujeto..." onkeypress="if(event.key === 'Enter') enviarMensaje()">
+                    <button onclick="enviarMensaje()" class="btn-enviar">Enviar</button>
+                </div>
+            </div>
+
+            <div class="panel-decision" id="panel-voto">
+                <h3>Veredicto Final</h3>
+                <p>Basado en la conversación,<br>¿con quién crees que hablaste?</p>
+                <button class="btn-humano" onclick="votar('humano')">Es un Humano 🧑</button>
+                <button class="btn-ia" onclick="votar('ia')">Es una IA 🤖</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded, update, increment, get } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBp1JWtd8G9mmZNoOpOipBDxqc1gI8Avc4",
+            authDomain: "turing-test-sim.firebaseapp.com",
+            databaseURL: "https://turing-test-sim-default-rtdb.firebaseio.com",
+            projectId: "turing-test-sim",
+            storageBucket: "turing-test-sim.firebasestorage.app",
+            messagingSenderId: "521112074028",
+            appId: "1:521112074028:web:d0882adb944b3239d7de89"
+            };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        let mensajesRef; 
+        let salaActual = ""; 
+
+        window.conectarSala = function() {
+            salaActual = document.getElementById("input-sala").value.trim().toLowerCase();
+            if (salaActual === "") return;
+
+            mensajesRef = ref(db, 'salas/' + salaActual + '/mensajes');
+            document.getElementById("nombre-sala").innerText = "Sala: " + salaActual;
+            document.getElementById("login-area").style.display = "none";
+            document.getElementById("chat-area").style.display = "block";
+
+            onChildAdded(mensajesRef, (snapshot) => {
+                const data = snapshot.val();
+                const chatDiv = document.getElementById("chat");
+                const div = document.createElement("div");
+                div.className = "mensaje " + data.remitente;
+                div.innerHTML = `<strong>${data.remitente === 'juez' ? 'Tú' : 'Sujeto'}:</strong> ${data.texto}`;
+                chatDiv.appendChild(div);
+                chatDiv.scrollTop = chatDiv.scrollHeight; 
+            });
+        };
+
+        window.enviarMensaje = function() {
+            const input = document.getElementById("input-mensaje");
+            if (input.value.trim() === "" || !mensajesRef) return;
+            push(mensajesRef, { remitente: "juez", texto: input.value });
+            input.value = ""; 
+        };
+
+        window.votar = function(eleccionJuez) {
+            const rolRealRef = ref(db, 'salas/' + salaActual + '/rolReal');
+            
+            get(rolRealRef).then((snapshot) => {
+                if (snapshot.exists()) {
+                    const rolReal = snapshot.val();
+                    let mensajeResultado = "";
+
+                    if (eleccionJuez === rolReal) {
+                        mensajeResultado = `¡CORRECTO! 🎉\nHas acertado. Realmente estabas hablando con un(a) ${rolReal.toUpperCase()}.`;
+                        alert(mensajeResultado);
+                    } else {
+                        mensajeResultado = `¡INCORRECTO! ❌\nTe han engañado. En realidad estabas hablando con un(a) ${rolReal.toUpperCase()}.`;
+                        alert(mensajeResultado);
+                    }
+
+                    const dbRef = ref(db);
+                    const updates = {};
+                    updates['/votos/' + eleccionJuez] = increment(1); 
+                    
+                    update(dbRef, updates).then(() => {
+                        document.getElementById('panel-voto').innerHTML = `
+                            <h3>Evaluación Terminada</h3>
+                            <p style="color: var(--text-main); font-weight: 600;">${mensajeResultado.replace('\n', '<br><br>')}</p>
+                        `;
+                    });
+
+                } else {
+                    alert("Error: El controlador de la prueba no definió su rol antes de empezar.");
+                }
+            }).catch((error) => {
+                console.error("Error al leer el rol: ", error);
+            });
+        };
+    </script>
+</body>
+</html>
