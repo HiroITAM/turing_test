@@ -1,0 +1,10 @@
+const firebaseConfig = {
+            apiKey: "AIzaSyBp1JWtd8G9mmZNoOpOipBDxqc1gI8Avc4",
+            authDomain: "turing-test-sim.firebaseapp.com",
+            databaseURL: "https://turing-test-sim-default-rtdb.firebaseio.com",
+            projectId: "turing-test-sim",
+            storageBucket: "turing-test-sim.firebasestorage.app",
+            messagingSenderId: "521112074028",
+            appId: "1:521112074028:web:d0882adb944b3239d7de89"
+        };
+

@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de la Máquina</title>
+    <style>
+        :root {
+            --bg-body: #0a0f1a;
+            --bg-panel: #1e293b;
+            --bg-input: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main); 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        #login-area, #chat-area {
+            background: var(--bg-panel); 
+            width: 100%;
+            max-width: 700px;
+            border-radius: 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            padding: 30px;
+            margin-top: 40px;
+            animation: aparecer 0.5s ease;
+        }
+
+        h2 { text-align: center; margin-bottom: 25px; font-weight: 600; color: var(--text-main); }
+        
+        input[type="text"], select { 
+            width: 100%; 
+            padding: 14px; 
+            font-size: 16px; 
+            background-color: var(--bg-input);
+            border: 1px solid transparent;
+            color: var(--text-main);
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            outline: none;
+            transition: border 0.3s;
+        }
+        
+        input[type="text"]:focus, select:focus { border: 1px solid var(--primary); }
+
+        button { 
+            padding: 14px 20px; 
+            cursor: pointer; 
+            border: none; 
+            font-weight: 600; 
+            font-size: 16px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+        button:active { transform: scale(0.98); }
+
+        .btn-responder { background-color: var(--primary); color: white; }
+        .btn-responder:hover { background-color: var(--primary-hover); }
+
+        #chat-area { display: none; margin-top: 20px; }
+        
+        #chat { 
+            height: 450px; 
+            background: var(--bg-body); 
+            border-radius: 12px;
+            overflow-y: auto; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border: 1px solid var(--bg-input);
+            scroll-behavior: smooth;
+        }
+
+        .mensaje { 
+            max-width: 75%; 
+            padding: 12px 16px; 
+            border-radius: 16px; 
+            font-size: 15px;
+            line-height: 1.4;
+            word-wrap: break-word;
+            animation: aparecer 0.3s ease-out forwards;
+        }
+        
+        .mensaje strong { display: block; font-size: 12px; margin-bottom: 4px; opacity: 0.8; }
+
+        .juez { 
+            background: var(--bg-input); 
+            color: var(--text-main); 
+            align-self: flex-start; 
+            border-bottom-left-radius: 4px;
+        }
+        
+        .sujeto { 
+            background: var(--primary); 
+            color: white; 
+            align-self: flex-end; 
+            border-bottom-right-radius: 4px;
+        }
+
+        .input-area { display: flex; gap: 10px; }
+        .input-area input { margin-bottom: 0; flex-grow: 1; }
+        .input-area button { width: auto; padding: 14px 25px; }
+
+        /* Panel de Estadísticas */
+        .panel-estadisticas { 
+            background: var(--bg-body); 
+            padding: 20px; 
+            border-radius: 12px; 
+            text-align: center; 
+            margin-bottom: 25px; 
+            border: 1px solid var(--bg-input);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .panel-estadisticas h3 { font-size: 16px; color: var(--text-muted); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .contadores { 
+            display: flex; 
+            gap: 30px; 
+            font-size: 18px; 
+            margin-bottom: 15px;
+            background: var(--bg-panel);
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        
+        .color-humano { color: var(--success); font-size: 24px; }
+        .color-ia { color: var(--danger); font-size: 24px; }
+        
+        .btn-reset { 
+            background: transparent; 
+            color: var(--warning); 
+            border: 1px solid var(--warning);
+            padding: 8px 16px; 
+            font-size: 13px; 
+            width: auto;
+        }
+        .btn-reset:hover { background: rgba(245, 158, 11, 0.1); }
+
+        .btn-ia-sugerir {
+            background-color: #7c3aed;
+            color: white;
+            width: auto;
+            padding: 14px 18px;
+        }
+        .btn-ia-sugerir:hover { background-color: #6d28d9; }
+        .btn-ia-sugerir:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        /* Panel configuración IA */
+        .ia-config-panel {
+            background: rgba(124, 58, 237, 0.08);
+            border: 1px solid rgba(124, 58, 237, 0.35);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 15px;
+            animation: aparecer 0.3s ease;
+        }
+        .ia-config-panel h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #a78bfa;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ia-config-panel select,
+        .ia-config-panel input[type="password"] {
+            background-color: rgba(51, 65, 85, 0.7);
+            border: 1px solid rgba(124, 58, 237, 0.4);
+            margin-bottom: 12px;
+        }
+        .ia-config-panel input[type="password"]:last-child { margin-bottom: 0; }
+        .ia-config-panel select:focus,
+        .ia-config-panel input[type="password"]:focus { border-color: #7c3aed; }
+        .perfil-badge {
+            display: inline-block;
+            font-size: 11px;
+            background: rgba(124, 58, 237, 0.25);
+            color: #a78bfa;
+            border: 1px solid rgba(124, 58, 237, 0.4);
+            border-radius: 6px;
+            padding: 2px 8px;
+            margin-left: 6px;
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 600;
+        }
+
+        #chat::-webkit-scrollbar { width: 8px; }
+        #chat::-webkit-scrollbar-track { background: var(--bg-body); border-radius: 8px; }
+        #chat::-webkit-scrollbar-thumb { background: var(--bg-input); border-radius: 8px; }
+
+        /* Timer de escritura */
+        #timer-area {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 10px;
+            margin-bottom: 12px;
+            animation: aparecer 0.3s ease;
+        }
+        .timer-fila {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--warning);
+        }
+        .timer-dots { letter-spacing: 3px; }
+        .timer-barra-contenedor {
+            width: 100%;
+            height: 4px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .timer-barra {
+            height: 100%;
+            background: var(--warning);
+            border-radius: 4px;
+            transition: width 1s linear;
+        }
+        .punto { animation: parpadeo 1.4s infinite both; font-weight: bold; }
+        .punto:nth-child(2) { animation-delay: .2s; }
+        .punto:nth-child(3) { animation-delay: .4s; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        @keyframes aparecer { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes parpadeo { 0% { opacity: .2; } 20% { opacity: 1; } 100% { opacity: .2; } }
+    </style>
+</head>
+<body>
+
+    <div id="login-area">
+        <h2>Panel de Control Central</h2>
+        <input type="text" id="input-sala" placeholder="ID de la sala (Ej: sala01)" onkeypress="if(event.key === 'Enter') conectarSala()">
+        <select id="select-rol" onchange="toggleApiKeyArea()">
+            <option value="humano">Voy a actuar como: Humano 🧑</option>
+            <option value="ia">Voy a actuar como: IA 🤖</option>
+        </select>
+        <div id="apikey-area" style="display:none;">
+            <div class="ia-config-panel">
+                <h3>🤖 Configuración de Perfil IA</h3>
+                <select id="select-perfil">
+                    <option value="carlos">Carlos — Chavo universitario de GDL 🎮</option>
+                    <option value="dortiz">Dr. Ortiz — Médico psiquiatra CDMX 🩺</option>
+                    <option value="anasofi">AnaSofi — Influencer universitaria CDMX ✨</option>
+                </select>
+                <input type="password" id="input-apikey" placeholder="🔑  API Key de DeepSeek">
+            </div>
+        </div>
+        <button onclick="conectarSala()" class="btn-responder">Crear / Conectar a Sala</button>
+    </div>
+
+    <div id="chat-area">
+        <div class="panel-estadisticas">
+            <h3>Resultados Globales de la Prueba</h3>
+            <div class="contadores">
+                <span>Votos Humano: <strong id="count-humano" class="color-humano">0</strong></span>
+                <span>Votos IA: <strong id="count-ia" class="color-ia">0</strong></span>
+            </div>
+            <button class="btn-reset" onclick="resetearVotos()">🔄 Reiniciar Contadores</button>
+        </div>
+
+        <h2 style="font-size: 18px; text-align: left; color: var(--text-muted); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--text-main);">SALA: <span id="nombre-sala"></span></span>
+            <span style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size: 14px;">Rol: <span id="display-rol" style="color: var(--primary); text-transform: uppercase;"></span></span>
+                <button onclick="regresarAlLogin()" class="btn-reset" style="font-size:13px; padding:6px 12px;">← Cambiar sala</button>
+            </span>
+        </h2>
+        
+        <div id="chat"></div>
+
+        <div id="timer-area">
+            <div class="timer-fila">
+                <span>Simulando escritura<span class="punto">.</span><span class="punto">.</span><span class="punto">.</span></span>
+                <span>Podrás enviar en <strong id="timer-countdown">0:30</strong></span>
+            </div>
+            <div class="timer-barra-contenedor">
+                <div class="timer-barra" id="timer-barra" style="width:100%;"></div>
+            </div>
+        </div>
+
+        <div id="transcurrido-area" style="display:none; font-size:12px; color:var(--text-muted); text-align:right; margin-bottom:6px;">
+            Último mensaje hace <strong id="transcurrido-contador">0:00</strong>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="input-mensaje" placeholder="Escribe tu mensaje aquí..." onkeypress="if(event.key === 'Enter') enviarMensaje()" autocomplete="off">
+            <button id="btn-generar-ia" onclick="generarRespuestaIA()" class="btn-ia-sugerir" style="display:none;" title="Sugerir respuesta usando IA">🤖 Sugerir</button>
+            <button onclick="enviarMensaje()" class="btn-responder">Enviar</button>
+        </div>
+    </div>
+
+    <script src="prompt.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getDatabase, ref, push, onChildAdded, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-database.js";
+
+    const firebaseConfig = {
+            apiKey: "AIzaSyBp1JWtd8G9mmZNoOpOipBDxqc1gI8Avc4",
+            authDomain: "turing-test-sim.firebaseapp.com",
+            databaseURL: "https://turing-test-sim-default-rtdb.firebaseio.com",
+            projectId: "turing-test-sim",
+            storageBucket: "turing-test-sim.firebasestorage.app",
+            messagingSenderId: "521112074028",
+            appId: "1:521112074028:web:d0882adb944b3239d7de89"
+        };
+
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        let mensajesRef;
+        let salaActual = "";
+        let rolActual = "";
+        let apiKeyAzure = "";
+        let perfilActual = "";
+        let historialMensajes = [];
+        let cargaInicial = true;
+        let timerInterval = null;
+        const DURACION_TIMER = 30;
+        let transcurridoInterval = null;
+
+        window.toggleApiKeyArea = function() {
+            const rol = document.getElementById("select-rol").value;
+            document.getElementById("apikey-area").style.display = rol === "ia" ? "block" : "none";
+        };
+
+        const votosRef = ref(db, 'votos');
+        onValue(votosRef, (snapshot) => {
+            const data = snapshot.val() || { humano: 0, ia: 0 };
+            document.getElementById('count-humano').innerText = data.humano || 0;
+            document.getElementById('count-ia').innerText = data.ia || 0;
+        });
+
+        window.resetearVotos = function() {
+            if(confirm("¿Estás seguro de que quieres reiniciar la cuenta a 0?")) set(votosRef, { humano: 0, ia: 0 });
+        };
+
+        window.conectarSala = function() {
+            salaActual = document.getElementById("input-sala").value.trim().toLowerCase();
+            rolActual = document.getElementById("select-rol").value;
+
+            if (salaActual === "") return;
+
+            if (rolActual === "ia") {
+                apiKeyAzure = document.getElementById("input-apikey").value.trim();
+                if (!apiKeyAzure) { alert("Debes ingresar la API Key de DeepSeek para el rol IA."); return; }
+                perfilActual = document.getElementById("select-perfil").value;
+                document.getElementById("btn-generar-ia").style.display = "inline-block";
+            }
+
+            set(ref(db, 'salas/' + salaActual + '/rolReal'), rolActual);
+            if (rolActual === "ia") set(ref(db, 'salas/' + salaActual + '/perfilIA'), perfilActual);
+            mensajesRef = ref(db, 'salas/' + salaActual + '/mensajes');
+
+            const perfilLabels = { carlos: "Carlos", dortiz: "Dr. Ortiz", anasofi: "AnaSofi" };
+            document.getElementById("nombre-sala").innerText = salaActual;
+            document.getElementById("display-rol").innerHTML = rolActual === "ia"
+                ? `IA <span class="perfil-badge">${perfilLabels[perfilActual]}</span>`
+                : "Humano";
+            document.getElementById("login-area").style.display = "none";
+            document.getElementById("chat-area").style.display = "block";
+
+            cargaInicial = true;
+            setTimeout(() => { cargaInicial = false; }, 1500);
+
+            onChildAdded(mensajesRef, (snapshot) => {
+                const data = snapshot.val();
+                historialMensajes.push({ remitente: data.remitente, texto: data.texto });
+
+                const chatDiv = document.getElementById("chat");
+                const div = document.createElement("div");
+
+                div.className = "mensaje " + data.remitente;
+                const nombreMostrar = data.remitente === 'juez' ? 'Juez' : 'Tú';
+
+                div.innerHTML = `<strong>${nombreMostrar}</strong> ${data.texto}`;
+                chatDiv.appendChild(div);
+
+                setTimeout(() => chatDiv.scrollTop = chatDiv.scrollHeight, 10);
+
+                if (data.remitente === "juez" && !cargaInicial) {
+                    iniciarTimer();
+                }
+            });
+        };
+
+        window.generarRespuestaIA = async function() {
+            const btn = document.getElementById("btn-generar-ia");
+            btn.disabled = true;
+            btn.textContent = "Generando...";
+
+            const promptBase = PROMPTS[perfilActual] || PROMPTS.carlos;
+            const messages = [
+                { role: "system", content: promptBase + `\n\n[Contexto: Son aproximadamente las ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })} hora de México.]` }
+            ];
+
+            for (const msg of historialMensajes) {
+                if (msg.remitente === "juez") {
+                    messages.push({ role: "user", content: msg.texto });
+                } else if (msg.remitente === "sujeto") {
+                    messages.push({ role: "assistant", content: msg.texto });
+                }
+            }
+
+            try {
+                const response = await fetch("https://api.deepseek.com/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + apiKeyAzure
+                    },
+                    body: JSON.stringify({ model: "deepseek-chat", messages, temperature: 1.4 })
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error?.message || response.statusText);
+                }
+
+                const result = await response.json();
+                document.getElementById("input-mensaje").value = result.choices[0].message.content;
+                document.getElementById("input-mensaje").focus();
+            } catch (error) {
+                alert("Error al generar respuesta: " + error.message);
+                console.error(error);
+            }
+
+            btn.disabled = false;
+            btn.textContent = "🤖 Sugerir";
+        };
+
+        function iniciarTimer() {
+            clearInterval(timerInterval);
+            let restante = DURACION_TIMER;
+
+            // Bloquear botones
+            document.getElementById("input-mensaje").disabled = true;
+            document.getElementById("btn-generar-ia").disabled = true;
+            document.querySelector(".btn-responder").disabled = true;
+
+            // Mostrar timer
+            const timerArea = document.getElementById("timer-area");
+            const barra = document.getElementById("timer-barra");
+            const countdown = document.getElementById("timer-countdown");
+            timerArea.style.display = "flex";
+            barra.style.width = "100%";
+            countdown.textContent = "0:30";
+
+            // Timer de tiempo transcurrido
+            clearInterval(transcurridoInterval);
+            let transcurrido = 0;
+            const transcurridoArea = document.getElementById("transcurrido-area");
+            const transcurridoContador = document.getElementById("transcurrido-contador");
+            transcurridoArea.style.display = "block";
+            transcurridoContador.textContent = "0:00";
+            transcurridoInterval = setInterval(() => {
+                transcurrido++;
+                const m = Math.floor(transcurrido / 60);
+                const s = transcurrido % 60;
+                transcurridoContador.textContent = `${m}:${s.toString().padStart(2, '0')}`;
+            }, 1000);
+
+            // Señal de "escribiendo" al juez
+            if (salaActual) set(ref(db, 'salas/' + salaActual + '/escribiendo/sujeto'), true);
+
+            timerInterval = setInterval(() => {
+                restante--;
+                const mins = Math.floor(restante / 60);
+                const secs = restante % 60;
+                countdown.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+                barra.style.width = `${(restante / DURACION_TIMER) * 100}%`;
+
+                if (restante <= 0) {
+                    clearInterval(timerInterval);
+                    timerArea.style.display = "none";
+                    document.getElementById("input-mensaje").disabled = false;
+                    document.getElementById("btn-generar-ia").disabled = false;
+                    document.querySelector(".btn-responder").disabled = false;
+                    document.getElementById("input-mensaje").focus();
+                }
+            }, 1000);
+        }
+
+        window.regresarAlLogin = function() {
+            salaActual = "";
+            rolActual = "";
+            apiKeyAzure = "";
+            perfilActual = "";
+            historialMensajes = [];
+            mensajesRef = null;
+
+            clearInterval(timerInterval);
+            clearInterval(transcurridoInterval);
+            document.getElementById("transcurrido-area").style.display = "none";
+            cargaInicial = true;
+            document.getElementById("chat").innerHTML = "";
+            document.getElementById("input-mensaje").value = "";
+            document.getElementById("input-mensaje").disabled = false;
+            document.querySelector(".btn-responder").disabled = false;
+            document.getElementById("timer-area").style.display = "none";
+            document.getElementById("btn-generar-ia").style.display = "none";
+            document.getElementById("btn-generar-ia").disabled = false;
+            document.getElementById("input-sala").value = "";
+            document.getElementById("input-apikey").value = "";
+            document.getElementById("apikey-area").style.display = "none";
+            document.getElementById("select-rol").value = "humano";
+            document.getElementById("select-perfil").value = "carlos";
+
+            document.getElementById("chat-area").style.display = "none";
+            document.getElementById("login-area").style.display = "block";
+        };
+
+        // Lógica de "Escribiendo..."
+        let timeoutEscribiendo;
+        const inputMensaje = document.getElementById("input-mensaje");
+
+        inputMensaje.addEventListener("input", function() {
+            if (!salaActual) return;
+            set(ref(db, 'salas/' + salaActual + '/escribiendo/sujeto'), true);
+            clearTimeout(timeoutEscribiendo);
+            timeoutEscribiendo = setTimeout(() => {
+                set(ref(db, 'salas/' + salaActual + '/escribiendo/sujeto'), false);
+            }, 2000);
+        });
+
+        window.enviarMensaje = function() {
+            if (inputMensaje.value.trim() === "" || !mensajesRef) return;
+            const payload = { remitente: "sujeto", texto: inputMensaje.value };
+            if (rolActual === "ia" && perfilActual) payload.perfil = perfilActual;
+            push(mensajesRef, payload);
+            inputMensaje.value = ""; 
+            
+            // Apagar indicador de escritura al enviar
+            set(ref(db, 'salas/' + salaActual + '/escribiendo/sujeto'), false);
+            clearTimeout(timeoutEscribiendo);
+        };
+    </script>
+</body>
+</html>
